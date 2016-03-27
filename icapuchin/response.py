@@ -40,19 +40,6 @@ def now_rfc1123():
     return datetime.utcnow().strftime(RFC1123_DATETIME_FORMAT)
 
 
-class EndOnExit(object):
-
-    def __init__(self, response):
-        self.response = response
-
-    def __enter__(self):
-        return self.response
-
-    def __exit__(self, *exc_info):
-        if not any(exc_info):
-            self.response.end()
-
-
 class ICAPResponse(object):
 
     protocol = 'ICAP/1.0'
