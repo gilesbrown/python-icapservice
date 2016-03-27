@@ -12,6 +12,8 @@ setup(
     packages=['icapuchin'],
     zip_safe=False,
     install_requires=['six'],
+    include_package_data=True,
+    package_data={'': ['LICENSE']},
     classifiers=(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
