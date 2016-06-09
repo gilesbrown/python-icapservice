@@ -4,10 +4,7 @@ See https://tools.ietf.org/html/rfc3507#section-4.4.1.
 """
 from __future__ import print_function, unicode_literals
 import re
-
-
-class EncapsulationError(Exception):
-    """ The encapsulation in the request is wrong """
+from .response import BadComposition
 
 
 encapsulated_list = re.compile('''
@@ -20,15 +17,14 @@ encapsulated_list = re.compile('''
 ''', re.VERBOSE)
 
 
-def encapsulated_offsets(request):
+def encapsulated_offsets(header):
 
-    header = request.get('encapsulated')
-    if header is None:
+    if not header:
         return []
 
     match = encapsulated_list.match(header)
     if not match:
-        raise EncapsulationError("no match '%r'" % header)
+        raise BadComposition(reason="cannot parse 'encapsulated' header")
     groups = match.groups()
     previous_offset = 0
     offsets = []
@@ -37,7 +33,7 @@ def encapsulated_offsets(request):
             continue
         offset = int(offset)
         if offset < previous_offset:
-            raise EncapsulationError("unordered offsets '%s'" % header)
+            raise BadComposition(reason="unordered offsets in 'encapsulated' header")
         offsets.append((name, offset))
         previous_offset = offset
     return offsets

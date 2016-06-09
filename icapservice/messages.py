@@ -1,6 +1,8 @@
 from __future__ import print_function, unicode_literals
+from copy import deepcopy
 from six.moves.http_client import HTTPMessage
 from six import PY2
+from .response import OK
 
 
 START_LINE = b'{} {} {}\r\n'
@@ -12,16 +14,19 @@ def split_start_line(start_line):
     return start_line.rstrip().split(None, 2)
 
 
-class Request(HTTPMessage):
+class HTTPRequest(HTTPMessage):
 
     @classmethod
-    def from_rfile(cls, rfile):
+    def parse(cls, rfile):
         method, uri, protocol = split_start_line(rfile.readline())
         message = cls(rfile)
         message.method = method
         message.uri = uri
         message.protocol = protocol
         return message
+
+    def modify(self):
+        return OK(http_request=deepcopy(self))
 
     def __bytes__(self):
         start_line = START_LINE.format(self.method,
@@ -33,10 +38,10 @@ class Request(HTTPMessage):
         __str__ = __bytes__
 
 
-class Response(HTTPMessage):
+class HTTPResponse(HTTPMessage):
 
     @classmethod
-    def from_rfile(cls, rfile):
+    def parse(cls, rfile):
         protocol, status_code, reason = split_start_line(rfile.readline())
         message = cls(rfile)
         message.protocol = protocol

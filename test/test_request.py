@@ -1,9 +1,8 @@
 from __future__ import print_function, unicode_literals
 from six import BytesIO
 import pytest
-from icapuchin.request import (ICAPRequest,
-                               EncapsulationError,
-                               ChunkError)
+from icapservice.response import BadComposition
+from icapservice.request import ICAPRequest, ChunkError
 
 
 respmod_request = (
@@ -76,52 +75,65 @@ respmod_request_with_preview = (
 )
 
 
-def test_request_from_rfile():
-    request = ICAPRequest.from_rfile(BytesIO(respmod_request.format(296)))
+def test_request_parse():
+    request = ICAPRequest.parse(BytesIO(respmod_request.format(296)))
     assert request.method == b'RESPMOD'
     assert request.protocol == b'ICAP/1.0'
 
 
-def test_request_from_rfile_wrong_body_offset():
-    with pytest.raises(EncapsulationError):
-        ICAPRequest.from_rfile(BytesIO(respmod_request.format(295)))
+def test_request_parse_wrong_body_offset():
+    with pytest.raises(BadComposition):
+        ICAPRequest.parse(BytesIO(respmod_request.format(295)))
 
 
 def test_request_with_null_body():
-    request = ICAPRequest.from_rfile(BytesIO(options_response))
+    request = ICAPRequest.parse(BytesIO(options_response))
     assert request.get('Preview') == '2048'
 
 
 def test_request_with_preview():
-    request = ICAPRequest.from_rfile(BytesIO(respmod_request_with_preview.format('', '', '\r')))
+    request = ICAPRequest.parse(BytesIO(respmod_request_with_preview.format('', '', '\r')))
     assert request.get('Preview') == '16'
-    assert request.body_chunks == ['This is preview.']
+    assert request.preview_chunks == ['This is preview.']
     assert not request.eof
 
 
 def test_request_with_preview_ieof():
-    request = ICAPRequest.from_rfile(BytesIO(respmod_request_with_preview.format(' ieof ', '', '\r')))
+
+    continued = []
+    def continue_after_preview():
+        continued.append(True)
+
+    rfile = BytesIO(respmod_request_with_preview.format(' ieof ', '', '\r'))
+    request = ICAPRequest.parse(rfile, continue_after_preview)
     assert request.get('Preview') == '16'
-    assert request.body_chunks == ['This is preview.']
+    assert request.preview_chunks == ['This is preview.']
     assert request.eof
-    wfile = BytesIO()
-    enc_chunks = [chunk for chunk in request.encapsulated_chunks(wfile)]
-    assert enc_chunks == request.body_chunks
+    assert continued == []
+    enc_chunks = [chunk for chunk in request.chunks]
+    assert continued == []
+    assert enc_chunks == request.preview_chunks
 
 
 def test_request_with_non_zero_ieof():
-    request = ICAPRequest.from_rfile(BytesIO(respmod_request_with_preview.format('', '; ieof ', '\r')))
+    rfile = BytesIO(respmod_request_with_preview.format('', '; ieof ', '\r'))
+    continued = []
+    def continue_after_preview():
+        continued.append(True)
+    request = ICAPRequest.parse(rfile, continue_after_preview)
     with pytest.raises(ChunkError) as excinfo:
-        wfile = BytesIO()
-        for chunk in request.encapsulated_chunks(wfile):
+        for chunk in request.chunks:
             pass
     assert excinfo.value.message == 'ieof with non-zero size'
 
 
 def test_request_missing_cr_after_chunk():
-    request = ICAPRequest.from_rfile(BytesIO(respmod_request_with_preview.format('', '', '')))
+    continued = []
+    def continue_after_preview():
+        continued.append(True)
+    rfile = BytesIO(respmod_request_with_preview.format('', '', ''))
+    request = ICAPRequest.parse(rfile, continue_after_preview)
     with pytest.raises(ChunkError) as excinfo:
-        wfile = BytesIO()
-        for chunk in request.encapsulated_chunks(wfile):
+        for chunk in request.chunks:
             pass
     assert excinfo.value.message.endswith(' expecting CRLF')

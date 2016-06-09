@@ -1,5 +1,5 @@
 from six import BytesIO, binary_type
-from icapuchin.messages import Request, Response
+from icapservice.messages import HTTPRequest, HTTPResponse
 
 request_bytes = (
     b'POST /something HTTP/1.1\r\n'
@@ -19,12 +19,12 @@ response_bytes = (
 
 
 def test_request_bytes():
-    request = Request.from_rfile(BytesIO(request_bytes))
+    request = HTTPRequest.parse(BytesIO(request_bytes))
     # bytes does not include the content!
     assert binary_type(request) == request_bytes[:-3]
 
 
 def test_response_bytes():
-    response = Response.from_rfile(BytesIO(response_bytes))
+    response = HTTPResponse.parse(BytesIO(response_bytes))
     # bytes does not include the content!
     assert binary_type(response) == response_bytes[:-3]

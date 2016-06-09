@@ -2,15 +2,14 @@ from __future__ import print_function, unicode_literals
 from six import BytesIO
 from six.moves.http_client import HTTPMessage
 import pytest
-from icapuchin.encapsulated import encapsulated_offsets, EncapsulationError
+from icapservice.response import BadComposition
+from icapservice.encapsulated import encapsulated_offsets
 
 
 def check(offsets):
     value = ' , '.join('{} = {}'.format(n, o) for n, o in offsets)
-    header = 'Encapsulated: {} '.format(value)
-    rfile = BytesIO(header + '\r\n\r\n')
-    request = HTTPMessage(rfile)
-    assert encapsulated_offsets(request) == offsets
+    header_value = '{} '.format(value)
+    assert encapsulated_offsets(header_value) == offsets
 
 
 def test_encapsulated_offsets_opt_body():
@@ -40,7 +39,7 @@ def test_encapsulated_offsets_null_body():
 
 def test_encapsulation_wrong_name():
     offsets = [('no-body', 0)]
-    with pytest.raises(EncapsulationError):
+    with pytest.raises(BadComposition):
         check(offsets)
 
 
@@ -51,5 +50,5 @@ def test_encapsulated_header_not_present():
 
 def test_encapsulated_header_offsets_wrong_order():
     offsets = [('res-hdr', 2), ('res-body', 1)]
-    with pytest.raises(EncapsulationError):
+    with pytest.raises(BadComposition):
         check(offsets)

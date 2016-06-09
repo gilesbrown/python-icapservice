@@ -1,0 +1,51 @@
+from __future__ import print_function, unicode_literals
+from uuid import uuid4
+from .response import ICAPResponse, ICAPResponseHeaders
+from .handler import ICAPRequestHandler
+
+
+class ICAPService(object):
+
+    # See: https://tools.ietf.org/html/rfc3507#section-4.10.2
+    default_options_headers = {
+        'Preview': 0,
+        'Transfer-Preview': '*',
+        'Transfer-Ignore': ['jpg', 'jpeg', 'gif', 'png', 'swf', 'flv', 'ico'],
+        'Transfer-Complete': [],
+        'Max-Connections': 1000,
+        'Options-TTL': 7200,
+    }
+
+    # List of all possible ICAP method (excluding OPTIONS).
+    # The RFC allows allows for adding new methods as server extensions.
+    # If you do want to to this then just append the names to this list.
+    # See https://tools.ietf.org/html/rfc3507#section-4.3.2 for details.
+    icap_methods = ['REQMOD', 'RESPMOD']
+
+    # The `Abs_Path` section of the URI for this service, as per
+    # `https://tools.ietf.org/html/rfc3507#section-4.2`.
+    abs_path = None
+
+    def __init__(self):
+        self.options_headers = self.default_options_headers.copy()
+        self.options_headers['Methods'] = []
+        for method in self.icap_methods:
+            if hasattr(self, method):
+                self.options_headers['Methods'].append(method)
+        self.response_headers = ICAPResponseHeaders()
+        self.istag = uuid4().hex
+
+    def _get_istag(self):
+        return self.response_headers.get('ISTag')
+
+    def _set_istag(self, value):
+        self.response_headers['ISTag'] = value
+
+    istag = property(_get_istag, _set_istag)
+
+    def handler_class(self, **kwargs):
+        """ Return a new request handler class for just this service. """
+        return ICAPRequestHandler.for_services([self], **kwargs)
+
+    def OPTIONS(self, request):
+        return ICAPResponse(200, headers=self.options_headers)

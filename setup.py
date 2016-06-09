@@ -2,14 +2,14 @@ from setuptools import setup
 
 
 setup(
-    name='ICAPuchin',
+    name='icapservice',
     version='0.0.1',
-    description='ICAP server library for Python',
+    description='ICAP service library for Python',
     author='Giles Brown',
     author_email='giles_brown@hotmail.com',
-    url='https://github.com/gilesbrown/ICAPuchin',
+    url='https://github.com/gilesbrown/icapservice',
     license='MIT',
-    packages=['icapuchin'],
+    packages=['icapservice'],
     zip_safe=False,
     install_requires=['six'],
     include_package_data=True,
