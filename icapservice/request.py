@@ -4,7 +4,7 @@ from six.moves.urllib_parse import urlparse
 from copy import deepcopy
 from .messages import split_start_line, HTTPRequest, HTTPResponse
 from .encapsulated import encapsulated_offsets
-from .response import ICAPError, OK, BadComposition
+from .response import BadComposition, RequestURITooLong
 
 
 IEOF = object()
@@ -66,7 +66,7 @@ class ICAPRequest(HTTPMessage):
             return None
 
         if len(line) > MAX_REQUEST_LEN:
-            raise ICAPError(414)
+            raise RequestURITooLong()
 
         method, uri, protocol = split_start_line(line)
         request = cls(rfile, method,  uri, protocol)

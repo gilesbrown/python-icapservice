@@ -3,11 +3,11 @@ from glob import glob
 from pkg_resources import resource_filename
 from contextlib import closing
 from collections import namedtuple
-from six import binary_type, BytesIO
+from six import BytesIO
 from six.moves.http_client import HTTPMessage
 import pytest
 
-from icapservice import ICAPService, OK
+from icapservice import ICAPService, OK, NoModificationsNeeded
 from mocksocket import MockSocket
 
 
@@ -111,11 +111,30 @@ class ServiceExample3(ICAPService):
         chunks = ('Sorry, you are not allowed to access that naughty content.',)
         return OK(http_response=http_response, chunks=chunks)
 
+class ServiceExample5(ICAPService):
+
+    abs_path = '/sample-service'
+    persistent_connections = True
+
+    def __init__(self):
+        ICAPService.__init__(self)
+        self.istag = '"W3E4R7U9-L2E4-2"'
+        self.options_headers['Service'] = 'FOO Tech Server 1.0'
+        self.options_headers['Preview'] = 2048
+        self.options_headers['Transfer-Complete'] = ['asp', 'bat', 'exe', 'com']
+        self.options_headers['Transfer-Ignore'] = ['html']
+        self.options_headers['Allow'] = [204]
+
+    # define this so ICAPService will add it to options_headers['Methods']
+    def RESPMOD(self, request):
+        return NoModificationsNeeded()
+
 
 example_services = {
     1: ServiceExample1,
     2: ServiceExample2,
     3: ServiceExample3,
+    5: ServiceExample5,
 }
 
 

@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 from uuid import uuid4
 from six import BytesIO
+from six.moves.http_client import responses as http_reasons
 from .response import ICAPResponse, ICAPResponseHeaders
 from .handler import ICAPRequestHandler
 from .messages import HTTPResponse
@@ -38,15 +39,19 @@ class ICAPService(object):
         self.istag = uuid4().hex
 
     def _get_istag(self):
-        return self.response_headers.get('ISTag')
+        return self.response_headers.get('istag')
 
     def _set_istag(self, value):
-        self.response_headers['ISTag'] = value
+        self.response_headers['istag'] = value
 
     istag = property(_get_istag, _set_istag)
 
     def new_http_response(self, status_code, protocol=None, reason=None):
-        fp = BytesIO(b'{} {} {}\r\n\r\n'.format('HTTP/1.1', status_code, 'Forbidden'))
+        if not reason:
+            reason = http_reasons[status_code]
+        if not protocol:
+            protocol = 'HTTP/1.1'
+        fp = BytesIO(b'{} {} {}\r\n\r\n'.format(protocol, status_code, reason))
         return HTTPResponse.parse(fp)
 
     def handler_class(self, **kwargs):

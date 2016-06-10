@@ -1,8 +1,8 @@
 from __future__ import print_function, unicode_literals
 from six import BytesIO
 import pytest
-from icapservice.response import BadComposition
-from icapservice.request import ICAPRequest, ChunkError
+from icapservice.response import BadComposition, RequestURITooLong
+from icapservice.request import ICAPRequest, ChunkError, MAX_REQUEST_LEN
 
 
 respmod_request = (
@@ -137,3 +137,16 @@ def test_request_missing_cr_after_chunk():
         for chunk in request.chunks:
             pass
     assert excinfo.value.message.endswith(' expecting CRLF')
+
+format_request_line = b'REQMOD /{} ICAP/1.0\r\n\n'.format
+
+
+def test_parse():
+    rfile = BytesIO(format_request_line('abc'))
+    icap_request = ICAPRequest.parse(rfile)
+    assert icap_request.uri == '/abc'
+
+def test_max_request_len():
+    rfile = BytesIO(format_request_line('a' * MAX_REQUEST_LEN))
+    with pytest.raises(RequestURITooLong):
+        ICAPRequest.parse(rfile)

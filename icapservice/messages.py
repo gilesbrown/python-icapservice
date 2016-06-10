@@ -1,8 +1,6 @@
 from __future__ import print_function, unicode_literals
-from copy import deepcopy
 from six.moves.http_client import HTTPMessage
 from six import PY2
-from .response import OK
 
 
 START_LINE = b'{} {} {}\r\n'
@@ -24,9 +22,6 @@ class HTTPRequest(HTTPMessage):
         message.uri = uri
         message.protocol = protocol
         return message
-
-    def modify(self):
-        return OK(http_request=deepcopy(self))
 
     def __bytes__(self):
         start_line = START_LINE.format(self.method,

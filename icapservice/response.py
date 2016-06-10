@@ -1,6 +1,5 @@
 from __future__ import print_function, unicode_literals
 from datetime import datetime
-from itertools import chain
 from io import TextIOWrapper, BytesIO
 from functools import partial
 from six import iteritems, binary_type, text_type
@@ -23,15 +22,27 @@ icap_reasons.update({
     500: 'Server error',
 })
 
+_header_case = {
+    'istag': 'ISTag'
+}
+
+
+def header_case(h):
+    return _header_case.get(h.lower(), h.title())
+
 
 class ICAPResponseHeaders(dict):
 
+
     def __setitem__(self, key, value):
-        return super(ICAPResponseHeaders, self).__setitem__(key.title(), value)
+        return super(ICAPResponseHeaders, self).__setitem__(header_case(key), value)
+
+    def get(self, key):
+        return super(ICAPResponseHeaders, self).get(header_case(key))
 
     def merge(self, other):
         for k, v in iteritems(other):
-            self.setdefault(k, v)
+            self.setdefault(header_case(k), v)
 
 
 def now_rfc1123():
@@ -130,6 +141,7 @@ def icap_error(name, status_code):
 OK = partial(ICAPResponse, 200)
 NoModificationsNeeded = partial(ICAPResponse, 204)
 
+RequestURITooLong = icap_error(b'RequestURITooLong', 414)
 ServiceNotFound = icap_error(b'ServiceNotFound', 404)
 MethodNotAllowed = icap_error(b'MethodNotAllowed', 405)
 BadComposition = icap_error(b'BadComposition', 418)
