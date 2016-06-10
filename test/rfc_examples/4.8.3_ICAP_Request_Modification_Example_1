@@ -19,7 +19,7 @@ Date: Mon, 10 Jan 2000  09:55:21 GMT
 Server: ICAP-Server-Software/1.0
 Connection: close
 Istag: "W3E4R7U9-L2E4-2"
-Encapsulated: req-hdr=0, null-body=178
+Encapsulated: req-hdr=0, null-body=226
 
 GET /modified-path HTTP/1.1
 Host: www.origin-server.com

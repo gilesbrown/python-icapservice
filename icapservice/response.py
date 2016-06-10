@@ -50,10 +50,10 @@ class ICAPResponse(object):
         self.http_request = kw.pop('http_request', None)
         self.http_response = kw.pop('http_response', None)
         self.has_empty_body = False
-        self.chunks = ()
+        self.chunks = kw.pop('chunks', ())
         if kw:
             raise ValueError('unexpected keyword arguments %r' % kw)
-        if self.http_response and self.http_response:
+        if self.http_request and self.http_response:
             raise ValueError('cannot encapsulate both request and response')
 
     def header_bytes(self, any_chunks):
@@ -109,8 +109,7 @@ class ICAPResponse(object):
         return enc_header, enc_msg
 
     def copy(self, icap_request):
-        print("COPY IT!")
-        pass
+        raise NotImplementedError()
 
 
 class ICAPError(Exception):

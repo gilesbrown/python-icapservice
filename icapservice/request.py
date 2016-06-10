@@ -52,11 +52,11 @@ class ICAPRequest(HTTPMessage):
     def close_connection(self):
         return self.get('connection', '').lower().strip() == 'close'
 
-    def reqmod(self):
-        return OK(http_request=deepcopy(self.http_request))
+    def modify_http_request(self):
+        return deepcopy(self.http_request)
 
-    def respmod(self):
-        return OK(http_response=deepcopy(self.http_response))
+    def modify_http_response(self):
+        return deepcopy(self.http_response)
 
     @classmethod
     def parse(cls, rfile, continue_after_preview=lambda: None):

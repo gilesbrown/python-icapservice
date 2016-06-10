@@ -1,7 +1,9 @@
 from __future__ import print_function, unicode_literals
 from uuid import uuid4
+from six import BytesIO
 from .response import ICAPResponse, ICAPResponseHeaders
 from .handler import ICAPRequestHandler
+from .messages import HTTPResponse
 
 
 class ICAPService(object):
@@ -42,6 +44,10 @@ class ICAPService(object):
         self.response_headers['ISTag'] = value
 
     istag = property(_get_istag, _set_istag)
+
+    def new_http_response(self, status_code, protocol=None, reason=None):
+        fp = BytesIO(b'{} {} {}\r\n\r\n'.format('HTTP/1.1', status_code, 'Forbidden'))
+        return HTTPResponse.parse(fp)
 
     def handler_class(self, **kwargs):
         """ Return a new request handler class for just this service. """
