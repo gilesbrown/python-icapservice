@@ -1,0 +1,45 @@
+ICAP Response Modification Example 4 - ICAP Request
+----------------------------------------------------------------
+RESPMOD icap://icap.example.org/satisf ICAP/1.0
+Host: icap.example.org
+Encapsulated: req-hdr=0, res-hdr=137, res-body=284
+
+GET /origin-resource HTTP/1.1
+Host: www.origin-server.com
+Accept: text/html, text/plain, image/gif
+Accept-Encoding: gzip, compress
+
+HTTP/1.1 200 OK
+Date: Mon, 10 Jan 2000 09:52:22 GMT
+Server: Apache/1.3.6 (Unix)
+ETag: "63840-1ab7-378d415b"
+Content-Type: text/html
+Content-Length: 51
+
+33
+This is data that was returned by an origin server.
+0
+
+----------------------------------------------------------------
+ICAP Response Modification Example 4 - ICAP Response
+----------------------------------------------------------------
+ICAP/1.0 200 OK
+Date: Mon, 10 Jan 2000  09:55:21 GMT
+Server: ICAP-Server-Software/1.0
+Connection: close
+ISTag: "W3E4R7U9-L2E4-2"
+Encapsulated: res-hdr=0, res-body=215
+
+HTTP/1.1 200 OK
+Date: Mon, 10 Jan 2000 09:55:21 GMT
+Via: 1.0 icap.example.org (ICAP Example RespMod Service 1.1)
+Server: Apache/1.3.6 (Unix)
+ETag: "63840-1ab7-378d415b"
+Content-Type: text/html
+Content-Length: 51
+
+5c
+This is data that was returned by an origin server, but with
+value added by an ICAP server.
+0
+

@@ -41,13 +41,13 @@ def read_example(filename):
     return request, response
 
 
-class ServiceExample1(ICAPService):
+class Example1(ICAPService):
 
     abs_path = '/server'
     persistent_connections = False
 
     def __init__(self):
-        super(ServiceExample1, self).__init__()
+        super(Example1, self).__init__()
         self.istag = '"W3E4R7U9-L2E4-2"'
         self.response_headers['server'] = 'ICAP-Server-Software/1.0'
 
@@ -61,13 +61,13 @@ class ServiceExample1(ICAPService):
         return OK(http_request=http_request)
 
 
-class ServiceExample2(ICAPService):
+class Example2(ICAPService):
 
     abs_path = '/server'
     persistent_connections = False
 
     def __init__(self):
-        super(ServiceExample2, self).__init__()
+        super(Example2, self).__init__()
         self.istag = '"W3E4R7U9-L2E4-2"'
         self.response_headers['server'] = 'ICAP-Server-Software/1.0'
 
@@ -87,13 +87,13 @@ class ServiceExample2(ICAPService):
         return OK(http_request=http_request, chunks=chunks)
 
 
-class ServiceExample3(ICAPService):
+class Example3(ICAPService):
 
     persistent_connections = False
     abs_path = '/content-filter'
 
     def __init__(self):
-        super(ServiceExample3, self).__init__()
+        super(Example3, self).__init__()
         self.istag = '"W3E4R7U9-L2E4-2"'
         self.response_headers['server'] = 'ICAP-Server-Software/1.0'
 
@@ -111,7 +111,28 @@ class ServiceExample3(ICAPService):
         chunks = ('Sorry, you are not allowed to access that naughty content.',)
         return OK(http_response=http_response, chunks=chunks)
 
-class ServiceExample5(ICAPService):
+
+class Example4(ICAPService):
+
+    persistent_connections = False
+    abs_path = '/satisf'
+
+    def __init__(self):
+        super(Example4, self).__init__()
+        self.istag = '"W3E4R7U9-L2E4-2"'
+        self.response_headers['server'] = 'ICAP-Server-Software/1.0'
+
+    def RESPMOD(self, icap_request):
+        http_response = icap_request.modify_http_response()
+        http_response['via'] = '1.0 icap.example.org (ICAP Example RespMod Service 1.1)'
+        http_response['Date'] = 'Mon, 10 Jan 2000 09:55:21 GMT'
+        def new_chunks(icap_request):
+            for chunk in icap_request.chunks:
+                yield chunk.replace('origin server.', 'origin server, but with\r\nvalue added by an ICAP server.')
+        return OK(http_response=http_response, chunks=new_chunks(icap_request))
+
+
+class Example5(ICAPService):
 
     abs_path = '/sample-service'
     persistent_connections = True
@@ -126,15 +147,16 @@ class ServiceExample5(ICAPService):
         self.options_headers['Allow'] = [204]
 
     # define this so ICAPService will add it to options_headers['Methods']
-    def RESPMOD(self, request):
+    def RESPMOD(self, icap_request):
         return NoModificationsNeeded()
 
 
 example_services = {
-    1: ServiceExample1,
-    2: ServiceExample2,
-    3: ServiceExample3,
-    5: ServiceExample5,
+    1: Example1,
+    2: Example2,
+    3: Example3,
+    4: Example4,
+    5: Example5,
 }
 
 
@@ -169,7 +191,6 @@ def parse_enc(fp, offset):
 
 
 def parse_icap_response(data):
-
     with closing(BytesIO(data)) as fp:
         icap_status = fp.readline()
         icap_msg = HTTPMessage(fp)
@@ -210,7 +231,7 @@ def compare_response(expected_bytes, actual_bytes):
 def read_examples():
     dirname = resource_filename(__name__, 'rfc_examples')
     filenames = glob(os.path.join(dirname, '*_Example_?'))
-    return [read_example(filename) for filename in filenames][:3]
+    return [read_example(filename) for filename in filenames]
 
 
 @pytest.mark.parametrize("test_example,expected_response",
