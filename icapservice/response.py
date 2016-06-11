@@ -119,9 +119,6 @@ class ICAPResponse(object):
 
         return enc_header, enc_msg
 
-    def copy(self, icap_request):
-        raise NotImplementedError()
-
 
 class ICAPError(Exception):
     """ Base class for ICAP errors. """

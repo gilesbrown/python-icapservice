@@ -35,3 +35,16 @@ def test_handle_one_request():
     assert wfile.readline() == 'ICAP/1.0 200 OK\r\n'
     assert '\nMethods: RESPMOD\r\n' in request.wfile.value
     assert '\nEncapsulated: null-body=0\r\n' in request.wfile.value
+
+
+def test_handle_one_request_service_not_found():
+    service = NoMod()
+    service.abs_path = '/notme'
+    handler_class = service.handler_class()
+    request = MockSocket(req)
+    client_address = object()
+    server = object()
+    handler_class(request, client_address, server)
+    wfile = BytesIO(request.wfile.value)
+    assert wfile.readline() == 'ICAP/1.0 404 ICAP Service not found\r\n'
+

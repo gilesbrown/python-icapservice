@@ -70,7 +70,7 @@ respmod_request_with_preview = (
     b'\r\n'
     b'33{}\r\n'
     b'This is data that was returned by an origin server.{}\n'
-    b'0\r\n'
+    b'0;{}\r\n'
     b'\r\n'
 )
 
@@ -92,7 +92,7 @@ def test_request_with_null_body():
 
 
 def test_request_with_preview():
-    request = ICAPRequest.parse(BytesIO(respmod_request_with_preview.format('', '', '\r')))
+    request = ICAPRequest.parse(BytesIO(respmod_request_with_preview.format('', '', '\r', '')))
     assert request.get('Preview') == '16'
     assert request.preview_chunks == ['This is preview.']
     assert not request.eof
@@ -104,7 +104,7 @@ def test_request_with_preview_ieof():
     def continue_after_preview():
         continued.append(True)
 
-    rfile = BytesIO(respmod_request_with_preview.format(' ieof ', '', '\r'))
+    rfile = BytesIO(respmod_request_with_preview.format(' ieof ', '', '\r', ''))
     request = ICAPRequest.parse(rfile, continue_after_preview)
     assert request.get('Preview') == '16'
     assert request.preview_chunks == ['This is preview.']
@@ -116,7 +116,7 @@ def test_request_with_preview_ieof():
 
 
 def test_request_with_non_zero_ieof():
-    rfile = BytesIO(respmod_request_with_preview.format('', '; ieof ', '\r'))
+    rfile = BytesIO(respmod_request_with_preview.format('', '; ieof ', '\r', ''))
     continued = []
     def continue_after_preview():
         continued.append(True)
@@ -127,11 +127,23 @@ def test_request_with_non_zero_ieof():
     assert excinfo.value.message == 'ieof with non-zero size'
 
 
+def test_request_with_ieof_after_preview():
+    rfile = BytesIO(respmod_request_with_preview.format('', '', '\r', 'ieof'))
+    request = ICAPRequest.parse(rfile)
+    assert request.get('Preview') == '16'
+    assert request.preview_chunks == ['This is preview.']
+    assert not request.eof
+    with pytest.raises(ChunkError) as excinfo:
+        for chunk in request.chunks:
+            pass
+    assert excinfo.value.message == 'ieof after preview'
+
+
 def test_request_missing_cr_after_chunk():
     continued = []
     def continue_after_preview():
         continued.append(True)
-    rfile = BytesIO(respmod_request_with_preview.format('', '', ''))
+    rfile = BytesIO(respmod_request_with_preview.format('', '', '', ''))
     request = ICAPRequest.parse(rfile, continue_after_preview)
     with pytest.raises(ChunkError) as excinfo:
         for chunk in request.chunks:

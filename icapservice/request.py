@@ -131,7 +131,7 @@ class ICAPRequest(HTTPMessage):
 
         for chunk in read_chunks(self.fp):
             if chunk is IEOF:
-                raise ChunkError("should not see ieof after preview")
+                raise ChunkError("ieof after preview")
             yield chunk
 
 
