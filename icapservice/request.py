@@ -2,6 +2,7 @@ from __future__ import print_function, unicode_literals
 from six.moves.http_client import HTTPMessage
 from six.moves.urllib_parse import urlparse
 from copy import deepcopy
+import copy
 from .messages import split_start_line, HTTPRequest, HTTPResponse
 from .encapsulated import encapsulated_offsets
 from .response import BadComposition, RequestURITooLong
@@ -56,7 +57,7 @@ class ICAPRequest(HTTPMessage):
         return deepcopy(self.http_request)
 
     def modify_http_response(self):
-        return deepcopy(self.http_response)
+        return copy.copy(self.http_response)
 
     @classmethod
     def parse(cls, rfile, continue_after_preview=lambda: None):
