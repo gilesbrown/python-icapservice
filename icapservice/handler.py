@@ -133,12 +133,15 @@ class ICAPRequestHandler(StreamRequestHandler):
         icap_response.headers.merge(self.response_headers or {})
         if self.close_connection:
             icap_response.headers['Connection'] = 'close'
-
-        self.log.info('"%s %s" - %s',
+        try:
+            self.log.info('"%s %s" - %s',
                       icap_request.method,
                       icap_request.abs_path,
                       icap_response.status_code)
-
+        except Exception as e:
+            import traceback;
+            print(traceback.format_exc())
+            pass
         chunks = iter(icap_response.chunks)
         try:
             first_chunk = [next(chunks)]
@@ -157,7 +160,7 @@ class ICAPRequestHandler(StreamRequestHandler):
             self.wfile.write(FINAL_CHUNK)
 
     def continue_after_preview(self):
-        self.respond(100)
+        self.respond(None, 100)
 
     @classmethod
     def server(cls, server_class=None, server_address=None, **server_kwargs):
