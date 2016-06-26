@@ -69,8 +69,14 @@ class ICAPResponse(object):
 
     def header_bytes(self, any_chunks):
 
-        enc_hdr, enc_msg = self.encapsulated(any_chunks)
-        self.headers['Encapsulated'] = enc_hdr
+        if self.status_code not in (100, 204):
+            enc_hdr, enc_msg = self.encapsulated(any_chunks)
+            self.headers['Encapsulated'] = enc_hdr
+        else:
+            enc_msg = None
+            if any_chunks:
+                # http://www.measurement-factory.com/std/icap/#e1
+                raise ValueError("no encapsulation allowed")
 
         bio = BytesIO()
         sio = TextIOWrapper(bio, encoding='iso-8859-1')

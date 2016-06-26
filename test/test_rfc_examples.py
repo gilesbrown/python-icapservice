@@ -52,13 +52,13 @@ class Example1(ICAPService):
         self.response_headers['server'] = 'ICAP-Server-Software/1.0'
 
     def REQMOD(self, icap_request):
-        http_request = icap_request.modify_http_request()
+        http_request, chunks = icap_request.modify_http_request(decode=False)
         http_request.uri = '/modified-path'
         http_request['via'] = '1.0 icap-server.net (ICAP Example ReqMod Service 1.1)'
         http_request['accept-encoding'] = 'gzip, compress'
         http_request['accept'] = http_request['accept'] + ', image/gif'
         del http_request['cookie']
-        return OK(http_request=http_request)
+        return OK(http_request=http_request, chunks=chunks)
 
 
 class Example2(ICAPService):
@@ -71,20 +71,18 @@ class Example2(ICAPService):
         self.istag = '"W3E4R7U9-L2E4-2"'
         self.response_headers['server'] = 'ICAP-Server-Software/1.0'
 
+    def modify_chunks(self, chunks):
+        for chunk in chunks:
+            yield chunk.replace('this information.', 'this information.' + '  ICAP powered!')
+
     def REQMOD(self, icap_request):
-        http_request = icap_request.modify_http_request()
+        http_request, chunks = icap_request.modify_http_request(decode=False)
         http_request['via'] = '1.0 icap-server.net (ICAP Example ReqMod Service 1.1)'
         http_request['accept-encoding'] = 'gzip, compress'
         http_request['content-length'] = '45'
         http_request['accept'] = http_request['accept'] + ', image/gif'
 
-        def new_chunks(icap_request):
-            for chunk in icap_request.chunks:
-                yield chunk.replace('this information.', 'this information.' + '  ICAP powered!')
-
-        chunks = new_chunks(icap_request)
-
-        return OK(http_request=http_request, chunks=chunks)
+        return OK(http_request=http_request, chunks=self.modify_chunks(chunks))
 
 
 class Example3(ICAPService):
@@ -122,14 +120,15 @@ class Example4(ICAPService):
         self.istag = '"W3E4R7U9-L2E4-2"'
         self.response_headers['server'] = 'ICAP-Server-Software/1.0'
 
+    def modify_content(self, chunks):
+        for chunk in chunks:
+            yield chunk.replace('origin server.', 'origin server, but with\r\nvalue added by an ICAP server.')
+
     def RESPMOD(self, icap_request):
-        http_response = icap_request.modify_http_response()
+        http_response, chunks = icap_request.modify_http_response(decode=False)
         http_response['via'] = '1.0 icap.example.org (ICAP Example RespMod Service 1.1)'
         http_response['Date'] = 'Mon, 10 Jan 2000 09:55:21 GMT'
-        def new_chunks(icap_request):
-            for chunk in icap_request.chunks:
-                yield chunk.replace('origin server.', 'origin server, but with\r\nvalue added by an ICAP server.')
-        return OK(http_response=http_response, chunks=new_chunks(icap_request))
+        return OK(http_response=http_response, chunks=self.modify_content(chunks))
 
 
 class Example5(ICAPService):
@@ -164,7 +163,7 @@ def respond(request_bytes, service_class):
     request = MockSocket(request_bytes)
     client_address = object()
     service = service_class()
-    handler_class = service.handler_class(persistent_connections=service.persistent_connections)
+    handler_class = service.icap_handler_class(persistent_connections=service.persistent_connections)
     handler_class(request, client_address)
     assert request.wfile.closed
     return request.wfile.value

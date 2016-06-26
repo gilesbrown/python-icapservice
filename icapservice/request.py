@@ -2,9 +2,12 @@ from __future__ import print_function, unicode_literals
 from six.moves.http_client import HTTPMessage
 from six.moves.urllib_parse import urlparse
 from copy import deepcopy
+from .contentencoding import content_decoders
 from .messages import split_start_line, HTTPRequest, HTTPResponse
 from .encapsulated import encapsulated_offsets
-from .response import BadComposition, RequestURITooLong
+from .response import (BadComposition,
+                       RequestURITooLong,
+                       NoModificationsNeeded)
 
 
 IEOF = object()
@@ -44,22 +47,52 @@ class ICAPRequest(HTTPMessage):
         self.http_request = None
         self.http_response = None
         self.preview_chunks = []
-        self.continue_after_preview = None
+        self.send_continue_after_preview = None
         self.null_body = True
         self.eof = False
+
+    def content_decoder(self):
+        if self.http_response:
+            encoding = self.http_response.get('content-encoding', 'identity')
+        else:
+            encoding = self.http_request.get('content-encoding', 'identity')
+        return content_decoders[encoding]
 
     @property
     def close_connection(self):
         return self.get('connection', '').lower().strip() == 'close'
 
-    def modify_http_request(self):
-        return deepcopy(self.http_request)
+    def unmodified(self):
+        # XXX: check for self.preview is None and then return OK(..., chunks=self.chunks)?
+        self.eof = True
+        return NoModificationsNeeded()
 
-    def modify_http_response(self):
-        return deepcopy(self.http_response)
+    def modify_http_request(self, decode=True):
+        # we cannot copy the `fp`
+        del self.http_request.fp
+        http_request = deepcopy(self.http_request)
+        if decode:
+            decoder = self.content_decoder()
+            http_request['content-encoding'] = 'identity'
+            chunks = decoder(self.chunks)
+        else:
+            chunks = self.chunks
+        return http_request, chunks
+
+    def modify_http_response(self, decode=True):
+        # we cannot copy the `fp`
+        del self.http_response.fp
+        http_response = deepcopy(self.http_response)
+        if decode:
+            decoder = self.content_decoder()
+            http_response['content-encoding'] = 'identity'
+            chunks = decoder(self.chunks)
+        else:
+            chunks = self.chunks
+        return http_response, chunks
 
     @classmethod
-    def parse(cls, rfile, continue_after_preview=lambda: None):
+    def parse(cls, rfile, send_continue_after_preview=None):
 
         line = rfile.readline(MAX_REQUEST_LEN + 1)
         if not line:
@@ -70,10 +103,10 @@ class ICAPRequest(HTTPMessage):
 
         method, uri, protocol = split_start_line(line)
         request = cls(rfile, method,  uri, protocol)
-        request.continue_after_preview = continue_after_preview
+        request.send_continue_after_preview = send_continue_after_preview
         request.read_encapsulated_http(rfile)
         request.read_preview()
-        request.chunks = request._chunks(continue_after_preview)
+        request.chunks = request._chunks()
 
         return request
 
@@ -118,15 +151,23 @@ class ICAPRequest(HTTPMessage):
             else:
                 self.eof = True
 
-    def _chunks(self, continue_after_preview):
+    def continue_after_preview(self):
+
+        if self.eof:
+            return False
+
+        if self.send_continue_after_preview and self.preview is not None:
+            self.send_continue_after_preview()
+            self.send_continue_after_preview = False
+
+        return True
+
+    def _chunks(self):
 
         for chunk in self.preview_chunks:
             yield chunk
 
-        if self.preview is not None and not self.eof:
-            continue_after_preview()
-
-        if self.eof:
+        if not self.continue_after_preview():
             return
 
         for chunk in read_chunks(self.fp):
@@ -156,7 +197,7 @@ def read_chunks(rfile):
         if crlf != CRLF:
             raise ChunkError("found %r expecting CRLF" % crlf)
 
-        if chunk:
-            yield chunk
-        else:
+        if not chunk:
             break
+
+        yield chunk
