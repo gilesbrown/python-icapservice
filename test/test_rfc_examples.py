@@ -26,7 +26,7 @@ def read_example(filename):
     section = 0
     with open(filename, 'rb') as fp:
         for line in fp:
-            if line.startswith('-' * 10):
+            if line.startswith(b'-' * 10):
                 section += 1
             else:
                 if section == 0:

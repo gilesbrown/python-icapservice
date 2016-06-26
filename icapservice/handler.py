@@ -1,8 +1,7 @@
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 import socket
 import logging
 from itertools import chain
-from six import binary_type
 from six.moves.socketserver import (StreamRequestHandler,
                                     ThreadingMixIn,
                                     ForkingMixIn)
@@ -50,7 +49,7 @@ class ICAPRequestHandler(StreamRequestHandler):
     @classmethod
     def for_services(cls, services, **kwargs):
         """ Create a new handler class for the specified ICAP services. """
-        name = binary_type('ICAPServicesRequestHandler')
+        name = 'ICAPServicesRequestHandler'
         bases = (cls, object)
         service_map = {service_abs_path(service):
                        service for service in services}

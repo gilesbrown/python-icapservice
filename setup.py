@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='icapservice',
-    version='0.0.1',
+    version='0.1.0',
     description='ICAP service library for Python',
     author='Giles Brown',
     author_email='giles_brown@hotmail.com',

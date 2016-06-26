@@ -2,7 +2,7 @@ from __future__ import print_function, unicode_literals
 from six.moves.http_client import HTTPMessage
 from six.moves.urllib_parse import urlparse
 from copy import deepcopy
-from .contentencoding import content_decoders
+from .content import decoders
 from .messages import split_start_line, HTTPRequest, HTTPResponse
 from .encapsulated import encapsulated_offsets
 from .response import (BadComposition,
@@ -56,7 +56,7 @@ class ICAPRequest(HTTPMessage):
             encoding = self.http_response.get('content-encoding', 'identity')
         else:
             encoding = self.http_request.get('content-encoding', 'identity')
-        return content_decoders[encoding]
+        return decoders[encoding]
 
     @property
     def close_connection(self):
@@ -101,6 +101,7 @@ class ICAPRequest(HTTPMessage):
         if len(line) > MAX_REQUEST_LEN:
             raise RequestURITooLong()
 
+        print(repr(line))
         method, uri, protocol = split_start_line(line)
         request = cls(rfile, method,  uri, protocol)
         request.send_continue_after_preview = send_continue_after_preview
