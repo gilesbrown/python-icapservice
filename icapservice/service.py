@@ -51,10 +51,11 @@ class ICAPService(object):
             reason = http_reasons[status_code]
         if not protocol:
             protocol = 'HTTP/1.1'
-        fp = BytesIO(b'{} {} {}\r\n\r\n'.format(protocol, status_code, reason))
+        response = '{} {} {}\r\n\r\n'.format(protocol, status_code, reason)
+        fp = BytesIO(response.encode('utf-8'))
         return HTTPResponse.parse(fp)
 
-    def handler_class(self, **kwargs):
+    def icap_handler_class(self, **kwargs):
         """ Return a new request handler class for just this service. """
         return ICAPRequestHandler.for_services([self], **kwargs)
 

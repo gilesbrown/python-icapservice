@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='icapservice',
-    version='0.0.1',
+    version='0.1.0',
     description='ICAP service library for Python',
     author='Giles Brown',
     author_email='giles_brown@hotmail.com',
@@ -21,8 +21,8 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        #'Programming Language :: Python :: 3',
+        #'Programming Language :: Python :: 3.4',
+        #'Programming Language :: Python :: 3.5',
     ),
 )

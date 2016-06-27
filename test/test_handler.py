@@ -24,7 +24,7 @@ class NoMod(ICAPService):
 def test_handle_one_request():
 
     service = NoMod()
-    handler_class = service.handler_class()
+    handler_class = service.icap_handler_class()
     assert service_abs_path(service) in handler_class.service_map
 
     request = MockSocket(req)
@@ -40,7 +40,7 @@ def test_handle_one_request():
 def test_handle_one_request_service_not_found():
     service = NoMod()
     service.abs_path = '/notme'
-    handler_class = service.handler_class()
+    handler_class = service.icap_handler_class()
     request = MockSocket(req)
     client_address = object()
     server = object()

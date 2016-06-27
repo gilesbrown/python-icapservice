@@ -150,11 +150,11 @@ def test_request_missing_cr_after_chunk():
             pass
     assert excinfo.value.message.endswith(' expecting CRLF')
 
-format_request_line = b'REQMOD /{} ICAP/1.0\r\n\n'.format
+format_request_line = 'REQMOD /{} ICAP/1.0\r\n\n'.format
 
 
 def test_parse():
-    rfile = BytesIO(format_request_line('abc'))
+    rfile = BytesIO(format_request_line('abc').encode('utf-8'))
     icap_request = ICAPRequest.parse(rfile)
     assert icap_request.uri == '/abc'
 

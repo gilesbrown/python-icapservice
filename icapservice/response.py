@@ -1,4 +1,4 @@
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 from datetime import datetime
 from io import TextIOWrapper, BytesIO
 from functools import partial
@@ -7,7 +7,6 @@ from six.moves.http_client import responses
 
 
 RFC1123_DATETIME_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
-STATUS_LINE = b'{} {} {}\r\n'
 CRLF = b'\r\n'
 
 
@@ -69,25 +68,31 @@ class ICAPResponse(object):
 
     def header_bytes(self, any_chunks):
 
-        enc_hdr, enc_msg = self.encapsulated(any_chunks)
-        self.headers['Encapsulated'] = enc_hdr
+        if self.status_code not in (100, 204):
+            enc_hdr, enc_msg = self.encapsulated(any_chunks)
+            self.headers['Encapsulated'] = enc_hdr
+        else:
+            enc_msg = None
+            if any_chunks:
+                # http://www.measurement-factory.com/std/icap/#e1
+                raise ValueError("no encapsulation allowed")
 
         bio = BytesIO()
         sio = TextIOWrapper(bio, encoding='iso-8859-1')
 
-        status_line = '{} {} {}\r\n'.format(self.protocol,
-                                            self.status_code,
-                                            self.reason)
+        status_line = u'{} {} {}\r\n'.format(self.protocol,
+                                             self.status_code,
+                                             self.reason)
         sio.write(status_line)
         for key, value in iteritems(self.headers):
             if isinstance(value, list):
                 values = [text_type(v) for v in value]
-                line = '{}: {}\r\n'.format(key, ', '.join(values))
+                line = u'{}: {}\r\n'.format(key, ', '.join(values))
             else:
-                line = '{}: {}\r\n'.format(key, value)
+                line = u'{}: {}\r\n'.format(key, value)
 
             sio.write(line)
-        sio.write('\r\n')
+        sio.write(u'\r\n')
         sio.flush()
 
         if enc_msg:
@@ -138,7 +143,7 @@ def icap_error(name, status_code):
 OK = partial(ICAPResponse, 200)
 NoModificationsNeeded = partial(ICAPResponse, 204)
 
-RequestURITooLong = icap_error(b'RequestURITooLong', 414)
-ServiceNotFound = icap_error(b'ServiceNotFound', 404)
-MethodNotAllowed = icap_error(b'MethodNotAllowed', 405)
-BadComposition = icap_error(b'BadComposition', 418)
+RequestURITooLong = icap_error('RequestURITooLong', 414)
+ServiceNotFound = icap_error('ServiceNotFound', 404)
+MethodNotAllowed = icap_error('MethodNotAllowed', 405)
+BadComposition = icap_error('BadComposition', 418)
