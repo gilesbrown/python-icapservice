@@ -1,5 +1,5 @@
 #!/bin/bash
-
+sudo apt-get update
 sudo apt-get install squid -y
 
 sudo apt-get install python-pip -y
@@ -14,6 +14,7 @@ function append_line() {
     grep -q -F "$line" $file || sudo -u vagrant echo "$line" >> $file
 }
 
+touch  /home/vagrant/.bash_profile
 append_line "source /usr/local/bin/virtualenvwrapper.sh" ~vagrant/.bash_profile
 sudo -i -u vagrant mkvirtualenv icapservice
 sudo -i -u vagrant sh -c "~/.virtualenvs/icapservice/bin/pip install --upgrade pip"
