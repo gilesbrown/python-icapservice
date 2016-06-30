@@ -79,17 +79,19 @@ class ICAPRequest(HTTPMessage):
             chunks = self.chunks
         return http_request, chunks
 
-    def modify_http_response(self, decode=True, inject=''):
+    def modify_http_response(self, decode=True):
         # we cannot copy the `fp`
         del self.http_response.fp
+        # remove content-length for modified responses
+        del http_response['content-length']
+        
         http_response = deepcopy(self.http_response)
         if decode:
             decoder = self.content_decoder()
             http_response['content-encoding'] = 'identity'
-            http_response['content-length'] = str(int(http_response['content-length'] if 'content-length' in http_response else 0) + len(inject))
+            
             chunks = decoder(self.chunks)
         else:
-            http_response['content-length'] = str(int(http_response['content-length'] if 'content-length' in http_response else 0) + len(inject))
             chunks = self.chunks
         return http_response, chunks
 
