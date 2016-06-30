@@ -6,13 +6,12 @@ sudo apt-get install python-pip -y
 sudo /usr/bin/pip install virtualenv
 sudo /usr/bin/pip install virtualenvwrapper
 
-sudo -i -u vagrant mkvirtualenv icapservice
-
 function append_line() {
     local line=${1}
     local file=${2}
     grep -q -F "$line" $file || sudo -u vagrant echo "$line" >> $file
 }
+
 touch  /home/vagrant/.bash_profile
 touch /home/vagrant/.bashrc
 append_line "source /usr/local/bin/virtualenvwrapper.sh" ~vagrant/.bash_profile
