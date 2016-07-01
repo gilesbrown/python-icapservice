@@ -4,3 +4,4 @@ pytest-cov
 ipython
 ipdb
 tox
+wheel
