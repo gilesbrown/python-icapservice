@@ -82,10 +82,11 @@ class ICAPRequest(HTTPMessage):
     def modify_http_response(self, decode=True):
         # we cannot copy the `fp`
         del self.http_response.fp
+
+        http_response = deepcopy(self.http_response)
         # remove content-length for modified responses
         del http_response['content-length']
-        
-        http_response = deepcopy(self.http_response)
+
         if decode:
             decoder = self.content_decoder()
             http_response['content-encoding'] = 'identity'
