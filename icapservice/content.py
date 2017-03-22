@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 import zlib
-
+import brotli
 
 def decode_identity(chunks):
 
@@ -19,8 +19,10 @@ def decode_deflate(chunks, z=None):
         retry = False
 
     for chunk in chunks:
-
-        compressed = (z.unconsumed_tail + chunk)
+        if hasattr(z, 'unconsumed_tail'): # zlib
+            compressed = (z.unconsumed_tail + chunk)
+        else: # brotli
+            compressed = chunk
         try:
             decompressed = z.decompress(compressed)
         except zlib.error:
@@ -40,8 +42,14 @@ def decode_gzip(chunks):
     return decode_deflate(chunks, zlib.decompressobj(16 + zlib.MAX_WBITS))
 
 
+def decode_brotli(chunks):
+    z = brotli.Decompressor()
+    return decode_deflate(chunks, z)
+
+
 decoders = {
     'deflate': decode_deflate,
     'gzip': decode_gzip,
     'identity': decode_identity,
+    'br': decode_brotli,
 }
