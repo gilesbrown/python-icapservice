@@ -3,7 +3,6 @@
 import logging
 from icapservice import ICAPService, OK
 
-
 class Copy(ICAPService):
 
     abs_path = '/respmod'

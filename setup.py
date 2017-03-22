@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='icapservice',
-    version='0.1.0',
+    version='0.1.1',
     description='ICAP service library for Python',
     author='Giles Brown',
     author_email='giles_brown@hotmail.com',
@@ -11,7 +11,7 @@ setup(
     license='MIT',
     packages=['icapservice'],
     zip_safe=False,
-    install_requires=['six'],
+    install_requires=['six', 'brotlipy'],
     include_package_data=True,
     package_data={'': ['LICENSE']},
     classifiers=(
