@@ -48,8 +48,9 @@ def decode_brotli(chunks):
 
 
 decoders = {
+    'br': decode_brotli,
     'deflate': decode_deflate,
     'gzip': decode_gzip,
     'identity': decode_identity,
-    'br': decode_brotli,
+    'none': decode_identity,
 }
