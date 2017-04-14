@@ -90,7 +90,6 @@ class ICAPRequest(HTTPMessage):
         if decode:
             decoder = self.content_decoder()
             http_response['content-encoding'] = 'identity'
-            
             chunks = decoder(self.chunks)
         else:
             chunks = self.chunks
