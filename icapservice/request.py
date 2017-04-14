@@ -105,7 +105,6 @@ class ICAPRequest(HTTPMessage):
         if len(line) > MAX_REQUEST_LEN:
             raise RequestURITooLong()
 
-        print(repr(line))
         method, uri, protocol = split_start_line(line)
         request = cls(rfile, method,  uri, protocol)
         request.send_continue_after_preview = send_continue_after_preview
